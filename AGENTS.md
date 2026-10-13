@@ -140,7 +140,9 @@ The look follows two skills used during design: `apple-design` and `emil-design-
 ## Verifying UI changes
 
 - `swift run HomeBar --snapshot /tmp/panel.png` writes `/tmp/panel-*.png` (light, dark, auto
-  mode, SmartRent-only, light controls). Look at them.
+  mode, SmartRent-only, light controls, and `gallery`, the README hero). Look at them.
+- README images live in `docs/screenshots/`. Regenerate them with `--snapshot` after UI
+  changes. Use only demo devices in them: never a screenshot of a real home.
 - `ImageRenderer` cannot draw AppKit-backed views: `ScrollView`, `Menu`, `TextField`,
   system `Picker`/`Button` styles. The panel has an `isSnapshot` path for this. Custom
   controls (`SegmentedPicker`, `MonoButtonStyle`) render fine.

@@ -149,24 +149,50 @@ enum Snapshot {
                 render(LightControls(device: lamp, store: store), path, suffix: "light-controls", scheme: .dark)
             }
 
-            store.send(.setMode(.auto, device: MockProvider.thermostatID))
-            store.setSetpoint(.cooling, of: MockProvider.thermostatID, to: 79)
-            store.setSetpoint(.heating, of: MockProvider.thermostatID, to: 76)
-            await store.setLocked(false, device: "mock-lock")
-            store.send(.setOn(true, device: "mock-light"))
+            // A second home in another state: auto mode while heating, the door unlocked, a light on.
+            let auto = HomeStore(provider: CompositeProvider(primary: MockProvider(latency: .milliseconds(50)), accessories: [MockLights()]),
+                                 gate: AllowGate())
+            await auto.start()
+            auto.send(.setMode(.auto, device: MockProvider.thermostatID))
+            auto.setSetpoint(.cooling, of: MockProvider.thermostatID, to: 79)
+            auto.setSetpoint(.heating, of: MockProvider.thermostatID, to: 76)
+            await auto.setLocked(false, device: "mock-lock")
+            auto.send(.setOn(true, device: "mock-light"))
             try? await Task.sleep(for: .seconds(1.5))
-            write(store, path, suffix: "auto-dark", scheme: .dark)
+            write(auto, path, suffix: "auto-dark", scheme: .dark)
+
+            // The README hero: three panels side by side.
+            let gallery = HStack(alignment: .top, spacing: 36) {
+                framed(PanelView(store: store, isSnapshot: true), scheme: .dark)
+                framed(PanelView(store: auto, isSnapshot: true), scheme: .dark)
+                framed(PanelView(store: store, isSnapshot: true), scheme: .light)
+            }
+            .padding(48)
+            .background(LinearGradient(colors: [Color(white: 0.16), Color(white: 0.3)], startPoint: .topLeading, endPoint: .bottomTrailing))
+            render(gallery, path, suffix: "gallery", scheme: .dark, page: false)
             NSApplication.shared.terminate(nil)
         }
+    }
+
+    /// A panel as it looks under the menu bar: rounded corners and a soft shadow.
+    private static func framed(_ panel: some View, scheme: ColorScheme) -> some View {
+        panel
+            .background(scheme == .dark ? Color.black : Color.white)
+            .environment(\.colorScheme, scheme)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Color.white.opacity(0.12), lineWidth: 1))
+            // Flatten first, so the shadow falls around the panel, not around every view inside it.
+            .compositingGroup()
+            .shadow(color: .black.opacity(0.45), radius: 24, y: 12)
     }
 
     private static func write(_ store: HomeStore, _ path: String, suffix: String, scheme: ColorScheme) {
         render(PanelView(store: store, isSnapshot: true), path, suffix: suffix, scheme: scheme)
     }
 
-    private static func render(_ content: some View, _ path: String, suffix: String, scheme: ColorScheme) {
+    private static func render(_ content: some View, _ path: String, suffix: String, scheme: ColorScheme, page: Bool = true) {
         let view = content
-            .background(scheme == .dark ? Color.black : Color.white)
+            .background(page ? (scheme == .dark ? Color.black : Color.white) : Color.clear)
             .environment(\.colorScheme, scheme)
         let renderer = ImageRenderer(content: view)
         renderer.scale = 2
