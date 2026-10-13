@@ -1,0 +1,32 @@
+{
+  "data": [
+    {
+      "id": 4821,
+      "name": "Thermostat",
+      "type": "thermostat",
+      "online": true,
+      "attributes": [
+        {"name": "current_temp", "state": "72.0"},
+        {"name": "current_humidity", "state": "45"},
+        {"name": "heating_setpoint", "state": "68"},
+        {"name": "cooling_setpoint", "state": "76"},
+        {"name": "mode", "state": "cool"},
+        {"name": "fan_mode", "state": "auto"},
+        {"name": "operating_state", "state": "None"}
+      ]
+    },
+    {
+      "id": 4822,
+      "name": "Front Door",
+      "type": "entry_control",
+      "online": false,
+      "attributes": [{"name": "locked", "state": "true"}]
+    },
+    {
+      "id": 4823,
+      "name": "Bathroom Leak",
+      "type": "sensor_notification",
+      "attributes": [{"name": "leak", "state": "false"}]
+    }
+  ]
+}

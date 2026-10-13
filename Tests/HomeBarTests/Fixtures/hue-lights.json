@@ -1,0 +1,28 @@
+{
+  "errors": [],
+  "data": [
+    {
+      "id": "3f2c5a3e-1b0c-4f60-9c1d-7a1c2b3d4e5f",
+      "id_v1": "/lights/1",
+      "owner": {"rid": "9a8b7c6d-0000-4000-8000-000000000001", "rtype": "device"},
+      "metadata": {"name": "Living Room Lamp", "archetype": "sultan_bulb"},
+      "on": {"on": true},
+      "dimming": {"brightness": 64.57, "min_dim_level": 0.2},
+      "color_temperature": {"mirek": null, "mirek_valid": false, "mirek_schema": {"mirek_minimum": 153, "mirek_maximum": 500}},
+      "color": {"xy": {"x": 0.4573, "y": 0.41}, "gamut_type": "C"},
+      "type": "light"
+    },
+    {
+      "id": "8d1e2f30-4a5b-4c6d-8e7f-901a2b3c4d5e",
+      "metadata": {"name": "Hallway", "archetype": "classic_bulb"},
+      "on": {"on": false},
+      "dimming": {"brightness": 100.0},
+      "type": "light"
+    },
+    {
+      "id": "0000aaaa-0000-4000-8000-000000000002",
+      "metadata": {"name": "Motion"},
+      "type": "motion"
+    }
+  ]
+}

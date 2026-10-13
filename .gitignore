@@ -1,0 +1,23 @@
+# Build output
+.build/
+build/
+.swiftpm/
+*.xcodeproj/xcuserdata/
+DerivedData/
+
+# macOS
+.DS_Store
+
+# Never commit captures, recordings, or secrets. Redact real messages before
+# adding them to Tests/HomeBarTests/Fixtures (see AGENTS.md).
+*.har
+*.pcap
+*.pcapng
+*.mov
+*.mp4
+*.env
+.env*
+*.p12
+*.pem
+*.key
+*.mobileprovision
