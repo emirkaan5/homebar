@@ -17,11 +17,6 @@ All screenshots use the built-in demo devices (`--mock`), not a real home.
 |---|---|---|
 | ![Auto mode: keep the home between 76° and 79°, door unlocked, a light on](docs/screenshots/panel-auto-dark.png) | ![Colour controls for a Hue light: brightness, five shades of white, seven colours](docs/screenshots/panel-light-controls.png) | ![A home with only SmartRent devices: thermostat, lock, one light, and two sensors](docs/screenshots/panel-smartrent-dark.png) |
 
-**Locking the door**, frame by frame at 30 fps (left to right, top to bottom): the knob leans
-while the lock works, then turns as the new colour sweeps round the ring, and clicks into place.
-
-![The lock knob turning from unlocked to locked, frame by frame](docs/screenshots/lock-turn.png)
-
 To see the animations live: `open build/HomeBar.app --args --demo -fullAnimations YES`.
 
 ## Why it uses the cloud, not local Wi-Fi
