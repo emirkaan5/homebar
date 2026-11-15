@@ -1,0 +1,37 @@
+[
+  {
+    "entityId": "amzn1.ask.device.REDACTED1",
+    "entityType": "APPLIANCE",
+    "friendlyName": "Coffee Maker",
+    "legacyAppliance": {
+      "applianceId": "amzn1.ask.device.REDACTED1",
+      "friendlyName": "Coffee Maker",
+      "manufacturerName": "Amazon",
+      "connectedVia": "Amazon Smart Plug"
+    }
+  },
+  {
+    "entityId": "amzn1.ask.device.REDACTED2",
+    "entityType": "APPLIANCE",
+    "friendlyName": "Floor Lamp",
+    "legacyAppliance": {
+      "applianceId": "amzn1.ask.device.REDACTED2",
+      "friendlyName": "Floor Lamp",
+      "manufacturerName": "Amazon",
+      "connectedVia": "Amazon Smart Plug"
+    }
+  },
+  {
+    "entityId": "amzn1.ask.scene.REDACTED3",
+    "entityType": "SCENE",
+    "friendlyName": "Movie Time"
+  },
+  {
+    "entityId": "amzn1.ask.device.REDACTED4",
+    "entityType": "APPLIANCE"
+  },
+  {
+    "entityType": "APPLIANCE",
+    "friendlyName": "An entry with no ID at all"
+  }
+]

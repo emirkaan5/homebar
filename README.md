@@ -1,9 +1,9 @@
 # HomeBar
 
 A macOS menu bar app that controls your SmartRent thermostat, door lock, and lights,
-and Philips Hue lights.
+Philips Hue lights, and Amazon smart plugs.
 
-Works with SmartRent accounts. Not affiliated with SmartRent.
+Works with SmartRent and Amazon accounts. Not affiliated with either.
 
 Developing HomeBar? Start with [AGENTS.md](AGENTS.md).
 
@@ -54,13 +54,14 @@ If `devices` fails, the guessed parts of the protocol need a fix. See
 |---|---|
 | `Core` | Models, `HomeProvider` protocol, `HomeStore` (optimistic updates, undo after 10 s), `MockProvider` |
 | `SmartRentProvider` | Login and token refresh, REST client, Phoenix websocket with heartbeat and reconnect (1 s … 60 s) |
+| `AmazonProvider` | Amazon smart plugs through Amazon's private Alexa web API (cloud, unofficial) |
 | `Platform` | `KeychainStore` (this Mac only, no iCloud sync) |
 | `UI` | Panel, climate card, vent air-flow animation, sign-in |
 | `HomeBarApp` | `MenuBarExtra`, no Dock icon, reconnect on wake and on network change |
 | `HomeBarCLI` | `homebar-cli` |
 
 ```bash
-swift test                                        # 14 tests
+swift test                                        # 44 tests
 swift run HomeBar --snapshot /tmp/panel.png       # renders the panel with fake devices
 ```
 
@@ -68,6 +69,8 @@ swift run HomeBar --snapshot /tmp/panel.png       # renders the panel with fake 
 
 - The password is sent only to SmartRent at sign-in. It is never saved. Only the
   session tokens go in the Keychain.
+- Your Amazon password never reaches HomeBar at all: you type it into Amazon's own
+  page, inside the panel. Only the session that page leaves behind goes in the Keychain.
 - No tokens, passwords, or codes go to logs or error messages.
 - The app opens no listening ports.
 
@@ -119,6 +122,30 @@ animations on a loop (add `-fullAnimations YES` if Reduce Motion is on).
 Design notes: motion follows the `apple-design` and `emil-design-eng` skills. Springs
 with no overshoot for state changes, a bounce only where a physical part moves (the
 lock knob), press feedback on every control, and no animation when the panel opens.
+
+## Amazon smart plugs
+
+Choose **… > Add Amazon Plugs…** in the panel footer, then sign in on the page that
+appears. That page belongs to Amazon, so HomeBar never sees your password or your
+one-time code: it keeps only the session the page leaves behind.
+
+- The plug must already be set up in the Alexa app. HomeBar adds the plugs that account
+  already has; it cannot set one up.
+- This uses Amazon's own private web API, which is unofficial. It is not affiliated with
+  Amazon, it can break when Amazon changes something, and it is against Amazon's terms of
+  use. Amazon can also limit a session that asks too often, so HomeBar reads the state
+  every 20 seconds and no faster.
+- Everything travels through Amazon's cloud: a command takes a second or two and needs the
+  internet. This plug has no local API and no open firmware, so there is no local mode to
+  switch to.
+- A plug appears as a switch in the panel: click it to turn it on or off. HomeBar confirms
+  the change by reading the state back from Amazon.
+- The session lasts a few weeks. When it dies, the footer shows **Add Amazon Plugs…**
+  again. **Disconnect** forgets it.
+
+Try the setup without an account:
+`open build/HomeBar.app --args --mock --amazon-signed-out --window` (the fake plugs have no
+sign-in page, so they offer a button instead).
 
 ## Not built yet
 

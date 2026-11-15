@@ -13,12 +13,16 @@ let package = Package(
         .target(name: "Platform", dependencies: ["Core"]),
         .target(name: "SmartRentProvider", dependencies: ["Core"]),
         .target(name: "HueProvider", dependencies: ["Core"]),
+        .target(name: "AmazonProvider", dependencies: ["Core"]),
         .target(name: "UI", dependencies: ["Core"]),
-        .executableTarget(name: "HomeBarApp", dependencies: ["Core", "UI", "SmartRentProvider", "HueProvider", "Platform"]),
+        .executableTarget(
+            name: "HomeBarApp",
+            dependencies: ["Core", "UI", "SmartRentProvider", "HueProvider", "AmazonProvider", "Platform"]
+        ),
         .executableTarget(name: "HomeBarCLI", dependencies: ["Core", "SmartRentProvider", "HueProvider", "Platform"]),
         .testTarget(
             name: "HomeBarTests",
-            dependencies: ["Core", "SmartRentProvider", "HueProvider"],
+            dependencies: ["Core", "SmartRentProvider", "HueProvider", "AmazonProvider"],
             resources: [.copy("Fixtures")]
         ),
     ]
