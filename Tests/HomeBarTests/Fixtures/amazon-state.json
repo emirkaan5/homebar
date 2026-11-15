@@ -1,0 +1,24 @@
+{
+  "deviceStates": [
+    {
+      "entityId": "amzn1.ask.device.REDACTED1",
+      "entityType": "APPLIANCE",
+      "capabilityStates": [
+        "{\"namespace\":\"Alexa.PowerController\",\"name\":\"powerState\",\"value\":\"ON\",\"timeOfSample\":\"2026-11-15T18:04:11.512Z\"}",
+        "{\"namespace\":\"Alexa.EndpointHealth\",\"name\":\"connectivity\",\"value\":{\"value\":\"OK\"},\"timeOfSample\":\"2026-11-15T18:04:11.512Z\"}"
+      ]
+    },
+    {
+      "entityId": "amzn1.ask.device.REDACTED2",
+      "entityType": "APPLIANCE",
+      "capabilityStates": [
+        {
+          "namespace": "Alexa.PowerController",
+          "name": "powerState",
+          "value": "OFF",
+          "timeOfSample": "2026-11-15T18:04:11.512Z"
+        }
+      ]
+    }
+  ]
+}

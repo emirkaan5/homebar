@@ -5,6 +5,7 @@ import Core
 import UI
 import SmartRentProvider
 import HueProvider
+import AmazonProvider
 import Platform
 
 @main
@@ -13,7 +14,7 @@ struct HomeBarApp: App {
 
     var body: some Scene {
         MenuBarExtra {
-            PanelView(store: appDelegate.store, bridge: appDelegate.bridge)
+            PanelView(store: appDelegate.store, bridge: appDelegate.bridge, amazon: appDelegate.amazon)
         } label: {
             MenuBarLabel(store: appDelegate.store)
         }
@@ -34,16 +35,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ? MockLights(paired: !CommandLine.arguments.contains("--hue-unpaired"))
         : HueProvider(secrets: KeychainStore())
 
+    /// Amazon's smart plugs, next to the SmartRent devices. Fake ones with `--mock`;
+    /// `--amazon-signed-out` starts them signed out, to try the sign-in page.
+    let amazon: any AccountSetup & AccessoryProvider = AppDelegate.usesMock
+        ? MockPlugs(connected: !CommandLine.arguments.contains("--amazon-signed-out"))
+        : AmazonProvider(secrets: KeychainStore())
+
     private(set) lazy var store: HomeStore = {
         if AppDelegate.usesMock {
             // Fake devices only: the demo may skip Touch ID because no real door is involved.
             // `--signed-out` starts the fake account signed out, to try the sign-in form.
             let main = MockProvider(signedIn: !CommandLine.arguments.contains("--signed-out"), latency: .milliseconds(700))
-            return HomeStore(provider: CompositeProvider(primary: main, accessories: [bridge]),
+            return HomeStore(provider: CompositeProvider(primary: main, accessories: [bridge, amazon]),
                              gate: AppDelegate.isDemo ? AllowGate() : BiometricGate())
         }
         let main = SmartRentProvider(secrets: KeychainStore())
-        return HomeStore(provider: CompositeProvider(primary: main, accessories: [bridge]), gate: BiometricGate())
+        return HomeStore(provider: CompositeProvider(primary: main, accessories: [bridge, amazon]), gate: BiometricGate())
     }()
 
     private let pathMonitor = NWPathMonitor()
@@ -76,7 +83,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func showWindow() {
-        let controller = NSHostingController(rootView: PanelView(store: store, bridge: bridge, alwaysVisible: true))
+        let controller = NSHostingController(rootView: PanelView(store: store, bridge: bridge, amazon: amazon, alwaysVisible: true))
         controller.sizingOptions = [.preferredContentSize]
         let window = NSWindow(contentViewController: controller)
         window.title = "HomeBar"
@@ -130,6 +137,8 @@ struct AllowGate: ConfirmationGate {
 }
 
 /// Renders the panel with fake devices to PNG files, for a quick visual check.
+/// The set is the SmartRent devices and the Hue lights, as the screenshots in the
+/// README show them, so it leaves the Amazon plugs out.
 @MainActor
 enum Snapshot {
     static func render(to path: String) {

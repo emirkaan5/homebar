@@ -11,17 +11,25 @@ public struct PanelView: View {
     let isSnapshot: Bool
     /// A Hue Bridge to set up, if this build supports one.
     let bridge: (any BridgeSetup)?
+    /// An Amazon account to sign in to, for its smart plugs.
+    let amazon: (any AccountSetup & AccessoryProvider)?
     @State private var isVisible = false
     @State private var showsHueSetup = false
+    @State private var showsAmazonSetup = false
     @State private var hueBridgeName: String?
+    @State private var amazonAccountName: String?
     @State private var contentHeight: CGFloat = 0
     @Environment(\.colorScheme) private var scheme
     @Environment(\.accessibilityReduceMotion) private var systemReducesMotion
     @AppStorage(MotionPreference.key) private var fullAnimations = false
 
-    public init(store: HomeStore, bridge: (any BridgeSetup)? = nil, alwaysVisible: Bool = false, isSnapshot: Bool = false) {
+    public init(
+        store: HomeStore, bridge: (any BridgeSetup)? = nil, amazon: (any AccountSetup & AccessoryProvider)? = nil,
+        alwaysVisible: Bool = false, isSnapshot: Bool = false
+    ) {
         self.store = store
         self.bridge = bridge
+        self.amazon = amazon
         self.alwaysVisible = alwaysVisible || isSnapshot
         self.isSnapshot = isSnapshot
     }
@@ -46,7 +54,10 @@ public struct PanelView: View {
         .environment(\.reducesMotion, systemReducesMotion && !fullAnimations)
         .onAppear { isVisible = true }
         .onDisappear { isVisible = false }
-        .task { hueBridgeName = await bridge?.pairedBridgeName() }
+        .task {
+            hueBridgeName = await bridge?.pairedBridgeName()
+            amazonAccountName = await amazon?.connectedAccountName()
+        }
     }
 
     private var header: some View {
@@ -85,6 +96,17 @@ public struct PanelView: View {
             SignInView(store: store).card()
         case .needsTwoFactor:
             TwoFactorView(store: store).card()
+        case .ready where showsAmazonSetup:
+            if let amazon {
+                AmazonSetupView(account: amazon) { connected in
+                    showsAmazonSetup = false
+                    Task {
+                        amazonAccountName = await amazon.connectedAccountName()
+                        if connected { await store.reload() }
+                    }
+                }
+                .card()
+            }
         case .ready where showsHueSetup:
             if let bridge {
                 HueSetupView(bridge: bridge) { paired in
@@ -168,6 +190,20 @@ public struct PanelView: View {
                             }
                         } else {
                             Button("Add Philips Hue…") { showsHueSetup = true }
+                        }
+                    }
+                    if let amazon {
+                        Divider()
+                        if let amazonAccountName {
+                            Button("Disconnect \(amazonAccountName)") {
+                                Task {
+                                    await amazon.disconnect()
+                                    self.amazonAccountName = nil
+                                    await store.reload()
+                                }
+                            }
+                        } else {
+                            Button("Add Amazon Plugs…") { showsAmazonSetup = true }
                         }
                     }
                     Divider()
@@ -263,7 +299,7 @@ struct DeviceChip: View {
     @Environment(\.colorScheme) private var scheme
     @State private var width: CGFloat = 0
 
-    private var isSwitch: Bool { device.kind == .switchBinary }
+    private var isSwitch: Bool { device.kind.isSwitch }
     private var isOn: Bool { isSwitch && device.attributes[SwitchAttribute.on] == "true" }
 
     var body: some View {
@@ -277,7 +313,7 @@ struct DeviceChip: View {
             .disabled(!device.isOnline)
             .accessibilityLabel(device.displayName)
             .accessibilityValue(isOn ? "On" : "Off")
-            .accessibilityHint("Turns the light \(isOn ? "off" : "on")")
+            .accessibilityHint("Turns the \(device.noun) \(isOn ? "off" : "on")")
             .accessibilityAddTraits(.isToggle)
         } else {
             tile.accessibilityElement(children: .combine)
@@ -365,6 +401,7 @@ extension Device {
         case .lock: attributes[LockAttribute.locked] == "false" ? "lock.open.fill" : "lock.fill"
         case .switchBinary, .light: attributes["on"] == "true" ? "lightbulb.fill" : "lightbulb"
         case .dimmer: "lightbulb"
+        case .plug: "poweroutlet.type.b"
         case .leakSensor: "drop"
         case .motionSensor: "figure.walk.motion"
         case .unknown: "questionmark.square.dashed"
@@ -375,7 +412,7 @@ extension Device {
         guard isOnline else { return "Offline" }
         switch kind {
         case .lock: return attributes[LockAttribute.locked] == "true" ? "Locked" : attributes[LockAttribute.locked] == "false" ? "Unlocked" : "Unknown"
-        case .switchBinary, .light: return attributes["on"] == "true" ? "On" : "Off"
+        case .switchBinary, .light, .plug: return attributes["on"] == "true" ? "On" : "Off"
         case .dimmer: return attributes["level"].map { "\($0)%" } ?? "Unknown"
         case .leakSensor: return attributes["leak"] == "true" ? "Leak!" : "Dry"
         case .motionSensor: return attributes["motion_binary"] == "true" ? "Motion" : "No motion"
@@ -383,6 +420,9 @@ extension Device {
         case .unknown: return rawType
         }
     }
+
+    /// What a tile calls this device, for its accessibility hint.
+    var noun: String { kind == .plug ? "plug" : "light" }
 
     /// A light that is on, or motion that is seen.
     var isActive: Bool {

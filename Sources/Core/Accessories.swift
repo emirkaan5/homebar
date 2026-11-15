@@ -37,6 +37,25 @@ public protocol BridgeSetup: Sendable {
     func unpair() async
 }
 
+/// A service next to the main account that the person signs in to on the service's
+/// own web page, such as Amazon for its smart plugs. The page belongs to the
+/// service, so HomeBar never sees the password or the one-time code: it only takes
+/// the session that the page produced.
+public protocol AccountSetup: Sendable {
+    /// The page where the person signs in. nil in a build that has no page (the demo).
+    var signInPage: URL? { get }
+    /// A page to visit after signing in, when the service hands its session over to
+    /// another address. nil when one visit is enough.
+    var sessionPage: URL? { get }
+    /// The name of the account that is connected, or nil when none is.
+    func connectedAccountName() async -> String?
+    /// Keeps the session that the sign-in page produced.
+    func connect(cookies: [String: String]) async throws
+    /// Connects a build that has no sign-in page. Only the demo uses this.
+    func connectDemo() async
+    func disconnect() async
+}
+
 /// The main provider plus accessory providers, as one provider. Sign-in and
 /// homes come from the main provider. Each command goes to the provider that
 /// owns its device.

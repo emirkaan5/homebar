@@ -59,3 +59,36 @@ Tested only against fixtures and fake lights so far. Check these against a real 
 
 Brightness and colour temperature are throttled to one command per 150 ms during a drag
 (Hue asks for no more than about 10 commands a second per light).
+
+# Amazon smart plugs (private Alexa API, cloud)
+
+Unofficial and unverified: nothing here has been tested against a real account. The app
+only ever sends the session cookies that Amazon's own sign-in page left behind; the
+password and the one-time code stay in that page.
+
+Amazon answers at the Alexa address of the marketplace the account belongs to:
+`amazon.com` → `alexa.amazon.com`, and likewise for the others
+(`alexa.amazon.co.uk`, `alexa.amazon.de`, …).
+
+| Call | Request | Reply | Status |
+|---|---|---|---|
+| Entities | `GET https://alexa.<tld>/api/behaviors/entities?skillId=amzn1.ask.1p.smarthome` | `entityId`, `entityType`, `friendlyName`; the appliance id also under `legacyAppliance.applianceId` | check: whether the reply is always a bare list, and whether `legacyAppliance` is always there |
+| State | `POST /api/phoenix/state` `{"stateRequests":[{"entityId","entityType":"APPLIANCE"}]}` | `deviceStates[]`, each with `capabilityStates[]`. A capability is an object in some replies and a string holding JSON in others: `{"namespace":"Alexa.PowerController","name":"powerState","value":"ON"}` | check |
+| Change | `PUT /api/phoenix/state` `{"controlRequests":[{"entityId","entityType":"APPLIANCE","parameters":{"action":"turnOn"}}]}` | empty body; `turnOff` likewise | check |
+
+Headers: `Cookie: csrf=<token>; session-id=<id>`, plus `csrf: <token>`, with the Alexa
+address as `Referer` and `Origin`.
+
+There is no push. The app reads the state on a timer (20 s) and, after a change, reads it
+back until the new value appears (up to 6 s, 700 ms apart). Polling is what gets these
+sessions limited or flagged, so do not shorten the interval.
+
+An Amazon plug is a switch: on and off only, no brightness and no colour
+(`DeviceKind.plug`). The plug must be set up in the Alexa app once before it appears here.
+
+| Where | What |
+|---|---|
+| `Sources/AmazonProvider/AmazonAPI.swift` | Session, marketplace, addresses, the requests themselves |
+| `Sources/AmazonProvider/AmazonMapper.swift` | Field names, fallbacks, and the request bodies |
+| `Sources/AmazonProvider/AmazonProvider.swift` | Polling, change confirmation, and the stream |
+| `Sources/UI/AmazonSetupView.swift` | The sign-in page and the cookies it leaves behind |

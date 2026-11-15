@@ -11,10 +11,13 @@ public struct Home: Identifiable, Sendable, Hashable {
 }
 
 public enum DeviceKind: String, Sendable {
-    case thermostat, lock, switchBinary, dimmer, light, leakSensor, motionSensor, unknown
+    case thermostat, lock, switchBinary, dimmer, plug, light, leakSensor, motionSensor, unknown
 
     /// Devices that the Lights section shows.
     public var isLight: Bool { self == .light || self == .switchBinary || self == .dimmer }
+
+    /// Devices that are switched on and off, without brightness or colour.
+    public var isSwitch: Bool { self == .switchBinary || self == .dimmer || self == .plug }
 }
 
 public struct Device: Identifiable, Sendable, Equatable {
